@@ -31,6 +31,8 @@ class Entity:
         self.hit_mask = get_hit_mask(image) if image else None
         self.__dict__.update(kwargs)
 
+        self.simulation_mode = False
+
     def update_image(
         self, image: pygame.Surface, w: int = None, h: int = None
     ) -> None:
@@ -51,6 +53,10 @@ class Entity:
     def rect(self) -> pygame.Rect:
         return pygame.Rect(self.x, self.y, self.w, self.h)
 
+    @rect.setter
+    def rect(self, value):
+        self._rect = value
+
     def collide(self, other) -> bool:
         if not self.hit_mask or not other.hit_mask:
             return self.rect.colliderect(other.rect)
@@ -60,24 +66,27 @@ class Entity:
 
     def tick(self) -> None:
         self.draw()
-        rect = self.rect
-        if self.config.debug:
-            pygame.draw.rect(self.config.screen, (255, 0, 0), rect, 1)
-            # write x and y at top of rect
-            font = pygame.font.SysFont("Arial", 13, True)
-            text = font.render(
-                f"{self.x:.1f}, {self.y:.1f}, {self.w:.1f}, {self.h:.1f}",
-                True,
-                (255, 255, 255),
-            )
-            self.config.screen.blit(
-                text,
-                (
-                    rect.x + rect.w / 2 - text.get_width() / 2,
-                    rect.y - text.get_height(),
-                ),
-            )
+        # rect = self.rect
+        # if self.config.debug:
+        #     pygame.draw.rect(self.config.screen, (255, 0, 0), rect, 1)
+        #     # write x and y at top of rect
+        #     font = pygame.font.SysFont("Arial", 13, True)
+        #     text = font.render(
+        #         f"{self.x:.1f}, {self.y:.1f}, {self.w:.1f}, {self.h:.1f}",
+        #         True,
+        #         (255, 255, 255),
+        #     )
+        #     self.config.screen.blit(
+        #         text,
+        #         (
+        #             rect.x + rect.w / 2 - text.get_width() / 2,
+        #             rect.y - text.get_height(),
+        #         ),
+        #     )
+
+    def set_simulation_mode(self, mode):
+        self.simulation_mode = mode
 
     def draw(self) -> None:
-        if self.image:
+        if self.image and not self.simulation_mode:
             self.config.screen.blit(self.image, self.rect)

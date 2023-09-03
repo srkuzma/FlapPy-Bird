@@ -30,18 +30,23 @@ class Player(Entity):
         self.crash_entity = None
         self.set_mode(PlayerMode.SHM)
 
+        self.dist_x = 0
+        self.dist_y_upper = 0
+        self.dist_y_lower = 0
+
     def set_mode(self, mode: PlayerMode) -> None:
         self.mode = mode
         if mode == PlayerMode.NORMAL:
             self.reset_vals_normal()
-            self.config.sounds.wing.play()
+            # self.config.sounds.wing.play()
         elif mode == PlayerMode.SHM:
             self.reset_vals_shm()
         elif mode == PlayerMode.CRASH:
             self.stop_wings()
-            self.config.sounds.hit.play()
+            # self.config.sounds.hit.play()
             if self.crash_entity == "pipe":
-                self.config.sounds.die.play()
+                pass
+                # self.config.sounds.die.play()
             self.reset_vals_crash()
 
     def reset_vals_normal(self) -> None:
@@ -124,7 +129,8 @@ class Player(Entity):
         elif self.mode == PlayerMode.CRASH:
             self.tick_crash()
 
-        self.draw_player()
+        if not self.simulation_mode:
+            self.draw_player()
 
     def draw_player(self) -> None:
         rotated_image = pygame.transform.rotate(self.image, self.rot)
@@ -139,7 +145,7 @@ class Player(Entity):
             self.vel_y = self.flap_acc
             self.flapped = True
             self.rot = 80
-            self.config.sounds.wing.play()
+            # self.config.sounds.wing.play()
 
     def crossed(self, pipe: Pipe) -> bool:
         return pipe.cx <= self.cx < pipe.cx - pipe.vel_x
@@ -147,21 +153,50 @@ class Player(Entity):
     def collided(self, pipes: Pipes, floor: Floor) -> bool:
         """returns True if player collides with floor or pipes."""
 
+        for upper_pipe, lower_pipe in zip(pipes.upper, pipes.lower):
+            if upper_pipe.rect.x > self.rect.x + self.rect.w:
+                self.dist_x = upper_pipe.rect.x - (self.rect.x + self.rect.w)
+                self.dist_y_upper = self.rect.y - (upper_pipe.rect.y + upper_pipe.rect.h)
+                self.dist_y_lower = lower_pipe.rect.y - (self.rect.y + self.rect.h)
+
         # if player crashes into ground
         if self.collide(floor):
             self.crashed = True
             self.crash_entity = "floor"
+            print("CRASHED FLOOR")
             return True
 
         for pipe in pipes.upper:
             if self.collide(pipe):
+                print("CRASHED PIPE UPPER")
                 self.crashed = True
                 self.crash_entity = "pipe"
                 return True
         for pipe in pipes.lower:
             if self.collide(pipe):
+                print("CRASHED PIPE LOWER")
                 self.crashed = True
                 self.crash_entity = "pipe"
                 return True
 
         return False
+
+    def tick(self) -> None:
+        self.draw()
+        # rect = self.rect
+        # if self.config.debug:
+        #     # pygame.draw.rect(self.config.screen, (255, 0, 0), rect, 1)
+        #     # write x and y at top of rect
+        #     font = pygame.font.SysFont("Arial", 13, True)
+        #     text = font.render(
+        #         f"x:{self.dist_x:.1f}, yd:{self.dist_y_lower:.1f}, yu:{self.dist_y_upper:.1f}",
+        #         True,
+        #         (255, 255, 255),
+        #     )
+        #     self.config.screen.blit(
+        #         text,
+        #         (
+        #             rect.x + rect.w / 2 - text.get_width() / 2,
+        #             rect.y - text.get_height(),
+        #         ),
+        #     )
