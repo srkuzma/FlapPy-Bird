@@ -29,9 +29,10 @@ class Pipes(Entity):
         self.spawn_initial_pipes()
 
     def tick(self) -> None:
-        if self.can_spawn_pipes():
-            self.spawn_new_pipes()
-        self.remove_old_pipes()
+        if not self.simulation_mode:
+            if self.can_spawn_pipes():
+                self.spawn_new_pipes()
+            self.remove_old_pipes()
 
         for up_pipe, low_pipe in zip(self.upper, self.lower):
             up_pipe.tick()
@@ -87,6 +88,8 @@ class Pipes(Entity):
         pipe_height = self.config.images.pipe[0].get_height()
         pipe_x = self.config.window.width + 10
 
+        pipe_gap = self.pipe_gap
+
         upper_pipe = Pipe(
             self.config,
             self.config.images.pipe[0],
@@ -98,7 +101,7 @@ class Pipes(Entity):
             self.config,
             self.config.images.pipe[1],
             pipe_x,
-            gap_y + self.pipe_gap,
+            gap_y + pipe_gap,
         )
 
         return upper_pipe, lower_pipe

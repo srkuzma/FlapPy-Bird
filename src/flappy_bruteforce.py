@@ -41,8 +41,9 @@ class FlappyBruteForce(Flappy):
     def __init__(self):
         super().__init__()
         self.curr_frame = 0
-        self.frames_per_decision = 10
-        self.max_flaps = 10
+        self.frames_per_decision = 25
+        self.decision_frequency = 1
+        self.max_flaps = 3
         self.moves_lists = []
         for i in range(self.max_flaps + 1):
             self.moves_lists += generate_lists(self.frames_per_decision, i)
@@ -95,68 +96,60 @@ class FlappyBruteForce(Flappy):
             self.config.tick()
 
             self.curr_frame += 1
-            if self.curr_frame == self.frames_per_decision:
+            if self.curr_frame == self.decision_frequency:
                 self.curr_frame = 0
 
 
     def simulate_game(self, moves_list):
-        simulation_player = Player(self.player.config)
-        simulation_player.y = self.player.y
-        simulation_player.x = self.player.x
-        simulation_player.acc_y = self.player.acc_y
-        simulation_player.vel_y = self.player.vel_y
-        simulation_player.rot = self.player.rot
-        simulation_player.vel_rot = self.player.vel_rot
-        simulation_player.rot_max = self.player.rot_max
-        simulation_player.rot_min = self.player.rot_min
-        simulation_player.min_vel_y = self.player.min_vel_y
-        simulation_player.max_vel_y = self.player.max_vel_y
-        simulation_player.flapped = self.player.flapped
-        simulation_player.flap_acc = self.player.flap_acc
-        simulation_player.set_simulation_mode(True)
-        simulation_player.mode = self.player.mode
-        simulation_player.hit_mask = self.player.hit_mask
-        simulation_player.rect = self.player.rect
+        to_ret = True
 
-        simulation_pipes = Pipes(self.pipes.config)
-        simulation_pipes.upper = []
-        simulation_pipes.lower = []
+        old_pipe_x = []
+        old_pipe_y_l = []
+        old_pipe_y_u = []
+        for i in range(len(self.pipes.lower)):
+            old_pipe_x.append(self.pipes.lower[i].x)
+            old_pipe_y_l.append(self.pipes.lower[i].y)
+            old_pipe_y_u.append(self.pipes.upper[i].y)
 
-        for pipe in self.pipes.upper:
-            newpipe = Pipe(pipe.config)
-            newpipe.x = pipe.x
-            newpipe.y = pipe.y
-            newpipe.vel_x = pipe.vel_x
-            newpipe.hit_mask = copy.deepcopy(pipe.hit_mask)
-            newpipe.rect = copy.deepcopy(pipe.rect)
-            simulation_pipes.upper.append(newpipe)
+        old_player_x = self.player.x
+        old_player_y = self.player.y
+        old_player_vel_y = self.player.vel_y
+        old_player_rot = self.player.rot
+        old_player_vel_rot = self.player.vel_rot
+        old_player_acc_y = self.player.acc_y
+        old_player_flap_acc = self.player.flap_acc
 
-        for pipe in self.pipes.lower:
-            newpipe = Pipe(pipe.config)
-            newpipe.x = pipe.x
-            newpipe.y = pipe.y
-            newpipe.vel_x = pipe.vel_x
-            newpipe.hit_mask = copy.deepcopy(pipe.hit_mask)
-            newpipe.rect = copy.deepcopy(pipe.rect)
-            simulation_pipes.lower.append(newpipe)
-
-        simulation_pipes.set_simulation_mode(True)
+        self.player.set_simulation_mode(True)
+        self.pipes.set_simulation_mode(True)
 
         for i in range(len(moves_list)):
             if moves_list[i] == 1:
-                simulation_player.flap()
+                self.player.flap()
 
-            print(simulation_player.x)
-            print(simulation_pipes.lower[0].rect.x)
-            print('N')
-            if simulation_player.collided(simulation_pipes, self.floor):
-                print("COLLIDED")
-                print(simulation_player.y)
-                print(simulation_player.x)
-                return False
+            if self.player.collided(self.pipes, self.floor):
+                to_ret = False
+                break
 
-            simulation_player.tick()
-            simulation_pipes.tick()
+            self.player.tick()
+            self.pipes.tick()
 
-        return True
+        self.player.set_simulation_mode(False)
+        self.pipes.set_simulation_mode(False)
+
+        for i in range(len(self.pipes.lower)):
+            self.pipes.lower[i].x = old_pipe_x[i]
+            self.pipes.upper[i].x = old_pipe_x[i]
+            self.pipes.lower[i].y = old_pipe_y_l[i]
+            self.pipes.upper[i].y = old_pipe_y_u[i]
+
+        self.player.x = old_player_x
+        self.player.y = old_player_y
+        self.player.vel_y = old_player_vel_y
+        self.player.rot = old_player_rot
+        self.player.vel_rot = old_player_vel_rot
+        self.player.acc_y = old_player_acc_y
+        self.player.flap_acc = old_player_flap_acc
+        self.player.crashed = False
+
+        return to_ret
 

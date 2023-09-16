@@ -33,6 +33,7 @@ class Player(Entity):
         self.dist_x = 0
         self.dist_y_upper = 0
         self.dist_y_lower = 0
+        self.alive = True
 
     def set_mode(self, mode: PlayerMode) -> None:
         self.mode = mode
@@ -163,18 +164,18 @@ class Player(Entity):
         if self.collide(floor):
             self.crashed = True
             self.crash_entity = "floor"
-            print("CRASHED FLOOR")
+            # print("CRASHED FLOOR")
             return True
 
         for pipe in pipes.upper:
             if self.collide(pipe):
-                print("CRASHED PIPE UPPER")
+                # print("CRASHED PIPE UPPER")
                 self.crashed = True
                 self.crash_entity = "pipe"
                 return True
         for pipe in pipes.lower:
             if self.collide(pipe):
-                print("CRASHED PIPE LOWER")
+                # print("CRASHED PIPE LOWER")
                 self.crashed = True
                 self.crash_entity = "pipe"
                 return True
@@ -183,20 +184,20 @@ class Player(Entity):
 
     def tick(self) -> None:
         self.draw()
-        # rect = self.rect
-        # if self.config.debug:
-        #     # pygame.draw.rect(self.config.screen, (255, 0, 0), rect, 1)
-        #     # write x and y at top of rect
-        #     font = pygame.font.SysFont("Arial", 13, True)
-        #     text = font.render(
-        #         f"x:{self.dist_x:.1f}, yd:{self.dist_y_lower:.1f}, yu:{self.dist_y_upper:.1f}",
-        #         True,
-        #         (255, 255, 255),
-        #     )
-        #     self.config.screen.blit(
-        #         text,
-        #         (
-        #             rect.x + rect.w / 2 - text.get_width() / 2,
-        #             rect.y - text.get_height(),
-        #         ),
-        #     )
+        rect = self.rect
+        if self.config.debug:
+            # pygame.draw.rect(self.config.screen, (255, 0, 0), rect, 1)
+            # write x and y at top of rect
+            font = pygame.font.SysFont("Arial", 13, True)
+            text = font.render(
+                f"x:{self.dist_x:.1f}, yl:{self.dist_y_lower:.1f}, yu:{self.dist_y_upper:.1f}",
+                True,
+                (255, 255, 255),
+            )
+            self.config.screen.blit(
+                text,
+                (
+                    rect.x + rect.w / 2 - text.get_width() / 2,
+                    rect.y - text.get_height(),
+                ),
+            )
